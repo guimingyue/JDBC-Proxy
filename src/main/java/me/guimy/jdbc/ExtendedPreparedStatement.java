@@ -27,6 +27,7 @@ import java.sql.SQLWarning;
 import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -169,10 +170,7 @@ public class ExtendedPreparedStatement implements PreparedStatement {
         if (params.length > 0) {
             StringBuilder realSql = new StringBuilder();
             int validParamIdx = buildRealSql(realSql);
-            this.pstmt = this.prepareStatement(realSql.toString());
-            for (int i = 0; i < validParamIdx; i++) {
-                ParamUtils.setParam(this.pstmt, i + 1, this.params[i]);
-            }
+            this.pstmt = prepareSqlAndSetParams(realSql.toString(), validParamIdx);
         } else {
             this.pstmt = this.prepareStatement(originalSql);
         }
@@ -223,56 +221,66 @@ public class ExtendedPreparedStatement implements PreparedStatement {
     @Override
     public int executeUpdate() throws SQLException {
         if (this.params.length > 0) {
-            throw new UnsupportedOperationException("unsupported");
+            StringBuilder realSql = new StringBuilder();
+            int validParamIdx = buildRealSql(realSql);
+            this.pstmt = prepareSqlAndSetParams(realSql.toString(), validParamIdx);
         } else {
-            PreparedStatement pstmt = this.connection.prepareStatement(originalSql);
-            return pstmt.executeUpdate();
+            this.pstmt = this.connection.prepareStatement(originalSql);
         }
+        return this.pstmt.executeUpdate();
+    }
+    
+    private PreparedStatement prepareSqlAndSetParams(String realSql, int validParamIdx) throws SQLException {
+        PreparedStatement pstmt = this.prepareStatement(realSql);
+        for (int i = 0; i < validParamIdx; i++) {
+            ParamUtils.setParam(pstmt, i + 1, this.params[i]);
+        }
+        return pstmt;
     }
     
     @Override
     public void setNull(final int i, final int i1) throws SQLException {
-        
+        this.params[i-1] = ParamUtils.getNullParam();
     }
     
     @Override
     public void setBoolean(final int i, final boolean b) throws SQLException {
-        
+        this.params[i-1] = ParamUtils.getBooleanParam(b);
     }
     
     @Override
     public void setByte(final int i, final byte b) throws SQLException {
-        
+        this.params[i-1] = ParamUtils.getByteParam(b);
     }
     
     @Override
     public void setShort(final int i, final short i1) throws SQLException {
-        
+        this.params[i-1] = ParamUtils.getShortParam(i1);
     }
     
     @Override
     public void setInt(final int i, final int i1) throws SQLException {
-        
+        this.params[i-1] = ParamUtils.getIntParam(i1);
     }
     
     @Override
     public void setLong(final int i, final long l) throws SQLException {
-        
+        this.params[i-1] = ParamUtils.getLongParam(l);
     }
     
     @Override
     public void setFloat(final int i, final float v) throws SQLException {
-        
+        this.params[i-1] = ParamUtils.getFloatParam(v);
     }
     
     @Override
     public void setDouble(final int i, final double v) throws SQLException {
-        
+        this.params[i-1] = ParamUtils.getDoubleParam(v);
     }
     
     @Override
     public void setBigDecimal(final int i, final BigDecimal bigDecimal) throws SQLException {
-        
+        this.params[i-1] = ParamUtils.getObjectParam(bigDecimal);
     }
     
     @Override
@@ -287,17 +295,17 @@ public class ExtendedPreparedStatement implements PreparedStatement {
     
     @Override
     public void setDate(final int i, final Date date) throws SQLException {
-        
+        this.params[i-1] = ParamUtils.getObjectParam(date);
     }
     
     @Override
     public void setTime(final int i, final Time time) throws SQLException {
-        
+        this.params[i-1] = ParamUtils.getObjectParam(time);
     }
     
     @Override
     public void setTimestamp(final int i, final Timestamp timestamp) throws SQLException {
-        
+        this.params[i-1] = ParamUtils.getObjectParam(timestamp);
     }
     
     @Override
@@ -322,11 +330,15 @@ public class ExtendedPreparedStatement implements PreparedStatement {
     
     @Override
     public void setObject(final int i, final Object o, final int i1) throws SQLException {
-        
+        this.params[i-1] = ParamUtils.getObjectParam(o);
     }
     
     @Override
     public void setObject(final int i, final Object o) throws SQLException {
+        if (o == null) {
+            this.setNull(i, Types.OTHER);
+            return;
+        }
         if (o instanceof TableName) {
             this.params[i-1] = ParamUtils.getTableNameParam(((TableName) o).getTableName());
             return;
