@@ -23,15 +23,23 @@ public class ExtendedDruidDataSourceTest {
     
         ExtendedDataSource dataSource = new ExtendedDataSource(druidDataSource);
         
-        JdbcUtils.execute(dataSource, "CREATE TABLE user (id INT, name VARCHAR(40))");
-        JdbcUtils.execute(dataSource, "insert into user values(20,'name1')");
-        JdbcUtils.execute(dataSource, "insert into user values(30,'name2')");
+        JdbcUtils.execute(dataSource, "CREATE TABLE user (id INT primary key, name VARCHAR(40), age INT)");
+        JdbcUtils.execute(dataSource, "insert into user values(20,'name1', 13)");
+        JdbcUtils.execute(dataSource, "insert into user values(30,'name2', 14)");
         List<Map<String, Object>> res = JdbcUtils.executeQuery(dataSource, "select id, name from ? where id >= ? order by id desc", 
                 new TableName("user"), 20);
         Assert.assertEquals(2, res.size());
     
         res = JdbcUtils.executeQuery(dataSource, "select id, name from ? where id >= ? and name=? order by id desc ",
                 new TableName("user"), 20, "name1");
+        Assert.assertEquals(1, res.size());
+    
+        res = JdbcUtils.executeQuery(dataSource, "select id, name from user where id >= ? and name=? and age=? order by id desc ",
+                20, "name1", 14);
+        Assert.assertEquals(0, res.size());
+    
+        res = JdbcUtils.executeQuery(dataSource, "select id, name from user where id >= ? and name=? and age=? order by id desc ",
+                20, "name1", 13);
         Assert.assertEquals(1, res.size());
     }
     
