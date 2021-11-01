@@ -109,23 +109,6 @@
       </plugin>
 
       <plugin>
-        <artifactId>maven-gpg-plugin</artifactId>
-        <version>1.6</version>
-        <configuration>
-          <skip>${gpg.skip}</skip>
-        </configuration>
-        <executions>
-          <execution>
-            <id>sign-artifacts</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>sign</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
         <version>3.1.1</version>
@@ -148,7 +131,7 @@
           <execution>
             <phase>validate</phase>
             <goals>
-              <goal>create</goal>
+              <goal>create-timestamp</goal>
             </goals>
           </execution>
         </executions>
