@@ -25,6 +25,7 @@ import java.sql.RowId;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.SQLXML;
+import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
@@ -352,7 +353,14 @@ public class ExtendedPreparedStatement implements PreparedStatement {
     
     @Override
     public boolean execute() throws SQLException {
-        return false;
+        if (this.params.length > 0) {
+            StringBuilder realSql = new StringBuilder();
+            int validParamIdx = buildRealSql(realSql);
+            this.pstmt = prepareSqlAndSetParams(realSql.toString(), validParamIdx);
+        } else {
+            this.pstmt = this.prepareStatement(originalSql);
+        }
+        return this.pstmt.execute();
     }
     
     @Override
@@ -387,7 +395,10 @@ public class ExtendedPreparedStatement implements PreparedStatement {
     
     @Override
     public ResultSetMetaData getMetaData() throws SQLException {
-        return null;
+        if (this.pstmt == null) {
+            return null;
+        }
+        return this.pstmt.getMetaData();
     }
     
     @Override
@@ -590,12 +601,16 @@ public class ExtendedPreparedStatement implements PreparedStatement {
     
     @Override
     public boolean execute(final String s) throws SQLException {
-        return false;
+        Statement stmt = this.connection.createStatement();
+        return stmt.execute(s);
     }
     
     @Override
     public ResultSet getResultSet() throws SQLException {
-        return null;
+        if (this.pstmt == null) {
+            return null;
+        }
+        return this.pstmt.getResultSet();
     }
     
     @Override
@@ -665,7 +680,10 @@ public class ExtendedPreparedStatement implements PreparedStatement {
     
     @Override
     public ResultSet getGeneratedKeys() throws SQLException {
-        return null;
+        if (this.pstmt == null) {
+            return null;
+        }
+        return this.pstmt.getGeneratedKeys();
     }
     
     @Override
@@ -730,11 +748,23 @@ public class ExtendedPreparedStatement implements PreparedStatement {
     
     @Override
     public <T> T unwrap(final Class<T> aClass) throws SQLException {
-        return this.pstmt.unwrap(aClass);
+        PreparedStatement ps;
+        if (this.pstmt == null) {
+            ps = this.connection.prepareStatement(originalSql);
+        } else {
+            ps = this.pstmt;
+        }
+        return ps.unwrap(aClass);
     }
     
     @Override
     public boolean isWrapperFor(final Class<?> aClass) throws SQLException {
-        return this.pstmt.isWrapperFor(aClass);
+        PreparedStatement ps;
+        if (this.pstmt == null) {
+            ps = this.connection.prepareStatement(originalSql);
+        } else {
+            ps = this.pstmt;
+        }
+        return ps.isWrapperFor(aClass);
     }
 }
