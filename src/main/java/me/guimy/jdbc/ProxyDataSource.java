@@ -6,22 +6,25 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.logging.Logger;
 
-public class ExtendedDataSource implements DataSource {
+/**
+ * Proxy DataSource. This will proxy another JDBC DataSource.
+ */
+public class ProxyDataSource implements DataSource {
     
     private final DataSource dataSource;
     
-    public ExtendedDataSource(final DataSource dataSource) {
+    public ProxyDataSource(final DataSource dataSource) {
         this.dataSource = dataSource;
     }
     
     @Override
     public Connection getConnection() throws SQLException {
-        return new ExtendedConnection(dataSource.getConnection());
+        return new ProxyConnection(dataSource.getConnection());
     }
     
     @Override
     public Connection getConnection(final String s, final String s1) throws SQLException {
-        return new ExtendedConnection(dataSource.getConnection(s, s1));
+        return new ProxyConnection(dataSource.getConnection(s, s1));
     }
     
     public PrintWriter getLogWriter() throws SQLException {
