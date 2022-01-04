@@ -9,7 +9,7 @@ If you want to rewrite sql and the table names of the output sql will be rewrite
 to set the new table name with the `java.sql.PreparedStatement` API。
 
 ```java
-// step 1: create datasource
+// step 1: create datasource, H2 Database in this example
 JdbcDataSource jdbcDataSource = new JdbcDataSource();
 jdbcDataSource.setUrl("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1");
 // step 2: proxy datasource
